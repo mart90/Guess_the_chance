@@ -201,20 +201,6 @@
         $("#leaderboardLink").prop("href", server_address + "leaderboard.html")
         $("#aboutLink").prop("href", server_address + "about.html")
 
-		var token = localStorage.getItem('token');
-		if (!token || token == "undefined") {
-            window.location.href = server_address + 'login.html'
-        }
-        else {
-            var expires_at = new Date(localStorage.getItem('token_expires_at'));
-            var current_date = new Date();
-            expires_at.setMinutes(expires_at.getHours() - 23);
-
-            if (current_date > expires_at){
-                this.refreshToken();
-            }
-        }
-
         var getEventCall = $.ajax({
             type: "GET",
             url: server_address + "backend/events/{{eventId}}",
