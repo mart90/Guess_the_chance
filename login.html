@@ -48,7 +48,7 @@
 		loginCall.done(function (result) {
 			localStorage.setItem('token', result.token)
 			localStorage.setItem('token_expires_at', result.expires_at)
-			window.location.href = server_address + "index.html";
+			window.location.href = server_address;
 		});
 
 		loginCall.fail(function (result) {

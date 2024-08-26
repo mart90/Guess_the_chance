@@ -297,7 +297,10 @@
             $("#resolution").val(event.resolution)
             $("#result").val(result)
             $("#prediction_count").val(event.prediction_count)
-            $("#my_prediction").val(event.my_prediction)
+
+            if (event.my_prediction != undefined) {
+                $("#my_prediction").val(Math.round(parseFloat(event.my_prediction) * 100) / 100 + "%")
+            }
 
             $('#category option').filter(function() {
                 return $(this).text() === event.category;

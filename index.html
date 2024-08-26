@@ -58,7 +58,7 @@
                 event[7] += "%"
             }
             if (event[8] > 0) {
-                event[8] *= 100
+                event[8] = Math.round(event[8] * 10000) / 100
                 event[8] += "%"
             }
 
