@@ -253,10 +253,6 @@
                     $("#submitGuess").prop("hidden", false)
                 }
             }
-            
-            if (event.approved == 0) {
-                $("#approveEvent").prop("hidden", false)
-            }
 
             var result;
             if (event.result == 1 || event.result == 0) {
@@ -288,6 +284,10 @@
                 $("#date_close").prop("readonly", false)
                 $("#date_resolve").prop("readonly", false)
                 $("#resolution").prop("readonly", false)
+            
+                if (event.approved == 0) {
+                    $("#approveEvent").prop("hidden", false)
+                }
             }
 
             $("#description").val(event.description)
