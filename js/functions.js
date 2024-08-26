@@ -7,3 +7,18 @@ function convertDatetime(dt) {
     }
     return converted
 }
+
+function refreshToken() {
+    var refreshCall = $.ajax({
+        type: "GET",
+        url: server_address + "backend/refresh_token",
+        beforeSend: function (xhr) {
+            xhr.setRequestHeader('Authorization', 'Bearer ' + localStorage.getItem('token'));
+        }
+    });
+
+    refreshCall.done(function (result) {
+        localStorage.setItem('token', result.token)
+        localStorage.setItem('token_expires_at', result.expires_at)
+    });
+}
