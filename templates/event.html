@@ -121,7 +121,7 @@
         var updateEventCall = $.ajax({
             type: "PATCH",
             contentType: "application/json",
-            url: server_address + "backend/events/10",
+            url: server_address + "backend/events/{{eventId}}",
             beforeSend: function (xhr) {
                 xhr.setRequestHeader('Authorization', 'Bearer ' + localStorage.getItem('token'));
             },
@@ -143,7 +143,7 @@
     function approveEvent() {
         var approveCall = $.ajax({
             type: "POST",
-            url: server_address + "backend/events/10/approve",
+            url: server_address + "backend/events/{{eventId}}/approve",
             beforeSend: function (xhr) {
                 xhr.setRequestHeader('Authorization', 'Bearer ' + localStorage.getItem('token'));
             }
@@ -163,7 +163,7 @@
                 xhr.setRequestHeader('Authorization', 'Bearer ' + localStorage.getItem('token'));
             },
             data: JSON.stringify({
-                event_id: 10,
+                event_id: {{eventId}},
                 my_prediction: $("#my_prediction").val()
             })
         });
@@ -186,7 +186,7 @@
                 xhr.setRequestHeader('Authorization', 'Bearer ' + localStorage.getItem('token'));
             },
             data: JSON.stringify({
-                event_id: 10,
+                event_id: {{eventId}},
                 result: result
             })
         });
@@ -203,7 +203,7 @@
 
         var getEventCall = $.ajax({
             type: "GET",
-            url: server_address + "backend/events/10",
+            url: server_address + "backend/events/{{eventId}}",
             beforeSend: function (xhr) {
                 xhr.setRequestHeader('Authorization', 'Bearer ' + localStorage.getItem('token'));
             }
@@ -232,7 +232,7 @@
             if (event.my_prediction != undefined) {
                 getGuessesCall = $.ajax({
                     type: "GET",
-                    url: server_address + "backend/events/10/guesses",
+                    url: server_address + "backend/events/{{eventId}}/guesses",
                     beforeSend: function (xhr) {
                         xhr.setRequestHeader('Authorization', 'Bearer ' + localStorage.getItem('token'));
                     }
