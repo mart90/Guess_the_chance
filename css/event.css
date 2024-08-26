@@ -1,0 +1,22 @@
+#result {
+    font-weight: 600;
+}
+
+.btn {
+    width: 150px;
+    margin-left: 17%
+}
+
+.btn-admin {
+    margin-left: 2% !important
+}
+
+#dateResolved {
+    font-size: 14px;
+    font-weight: 300;
+}
+
+#guessesTableContainer {
+    margin-left: 10%;
+    width: 70%
+}

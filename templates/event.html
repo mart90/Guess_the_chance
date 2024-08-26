@@ -1,0 +1,342 @@
+<!DOCTYPE HTML>
+<html data-bs-theme="dark">
+<head>
+    <title>Predictions</title>	
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
+    <script src="https://cdn.datatables.net/2.1.4/js/dataTables.js"></script>
+    <script src="https://cdn.datatables.net/2.1.4/js/dataTables.bootstrap5.js"></script>
+	<script src="../js/serverAddress.js"></script>
+	<script src="../js/functions.js"></script>
+    
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous"/>
+    <link rel="stylesheet" href="https://cdn.datatables.net/2.1.4/css/dataTables.bootstrap5.css" />
+    <link rel="stylesheet" href="../css/event.css"/>
+</head>
+<body>
+    <div class="container border-start">
+        <nav class="navbar navbar-expand-lg">
+            <a id="homeLink" class="navbar-brand">Home</a>
+            <div class="navbar-nav" style="margin-left:auto">
+                <a id="leaderboardLink" class="nav-item nav-link">Leaderboard</a>
+                <a id="aboutLink" class="nav-item nav-link">About</a>
+            </div>
+        </nav>
+    </div>
+    <div class="container-sm pt-5 border-start">
+        <form>
+            <div class="row mb-3">
+                <label class="col-form-label col-sm-2 text-end" for="description">Title</label>
+                <div class="col-sm-10">
+                    <input type="text" maxlength="100" readonly class="form-control" id="description">
+                </div>
+            </div>
+            <div class="row mb-3">
+                <label class="col-form-label col-sm-2 text-end" for="category">Category</label>
+                <div class="col-sm-10">
+                    <select class="form-select" id="category"></select>
+                </div>
+            </div>
+            <div class="row mb-3">
+                <label class="col-form-label col-sm-2 text-end" for="date_start">Start date</label>
+                <div class="col-sm-10">
+                    <input type="text" readonly class="form-control" id="date_start" placeholder="yyyy-mm-dd hh:mm">
+                </div>
+            </div>
+            <div class="row mb-3">
+                <label class="col-form-label col-sm-2 text-end" for="date_close">Close date</label>
+                <div class="col-sm-10">
+                    <input type="text" readonly class="form-control" id="date_close" placeholder="yyyy-mm-dd hh:mm">
+                </div>
+            </div>
+            <div class="row mb-3">
+                <label class="col-form-label col-sm-2 text-end" for="date_resolve">Resolve at</label>
+                <div class="col-sm-10">
+                    <input type="text" readonly class="form-control" id="date_resolve" placeholder="yyyy-mm-dd hh:mm">
+                </div>
+            </div>
+            <div class="row mb-3">
+                <label class="col-form-label col-sm-2 text-end" for="resolution">Resolution criteria</label>
+                <div class="col-sm-10">
+                    <textarea class="form-control" readonly id="resolution" rows="5"></textarea>
+                </div>
+            </div>
+            <div class="row mb-3">
+                <label class="col-form-label col-sm-2 text-end" for="result">Result</label>
+                <div class="col-sm-10">
+                    <input type="text" readonly class="form-control-plaintext" id="result">
+                    <input type="text" readonly class="form-control-plaintext" hidden id="dateResolved"></text>
+                </div>
+            </div>
+            <div class="row mb-3">
+                <label class="col-form-label col-sm-2 text-end" for="prediction_count">Guesses</label>
+                <div class="col-sm-10">
+                    <input type="text" readonly class="form-control-plaintext" id="prediction_count">
+                </div>
+            </div>
+            <div class="row mb-3">
+                <label class="col-form-label col-sm-2 text-end" for="average_prediction">Average guess</label>
+                <div class="col-sm-10">
+                    <input type="text" readonly class="form-control-plaintext" id="average_prediction">
+                </div>
+            </div>
+            <div class="row mb-3">
+                <label class="col-form-label col-sm-2 text-end" for="my_prediction">My guess</label>
+                <div class="col-sm-10">
+                    <input type="text" class="form-control" id="my_prediction" placeholder="A percentage from 0 to 100">
+                </div>
+            </div>
+        </form>
+        <div class="row mb-3 pt-2">
+            <button id="submitGuess" hidden class="btn btn-success" onclick="submitPrediction()">Submit guess</button>
+            <button id="approveEvent" hidden class="btn btn-primary" onclick="approveEvent()">Approve</button>
+            <div class="col-sm-10" style="margin-left: 58%">
+                <button id="update" hidden class="btn btn-primary btn-admin col-sm" onclick="update()">Update</button>
+                <button id="resolveYes" hidden class="btn btn-success btn-admin col-sm" onclick="resolve(1)">Resolve to Yes</button>
+                <button id="resolveNo" hidden class="btn btn-danger btn-admin col-sm" onclick="resolve(0)">Resolve to No</button>
+            </div>
+        </div>
+
+        <div class="row mb-3 pt-2" id="guessesTableContainer">
+            <table id="guessesTable" hidden class="table table-striped" >
+                <thead>
+                    <tr>
+                        <th>Username</th>
+                        <th>Rating</th>
+                        <th>Datetime</th>
+                        <th>Guess</th>
+                        <th>Rating change</th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+        </div>
+    </div>
+</body>
+
+<script>
+    function update() {
+        var updateEventCall = $.ajax({
+            type: "PATCH",
+            contentType: "application/json",
+            url: server_address + "backend/events/10",
+            beforeSend: function (xhr) {
+                xhr.setRequestHeader('Authorization', 'Bearer ' + localStorage.getItem('token'));
+            },
+            data: JSON.stringify({
+                description: $("#description").val(),
+                category: $("#category").val(),
+                date_start: $("#date_start").val(),
+                date_close: $("#date_close").val(),
+                date_resolve: $("#date_resolve").val(),
+                resolution: $("#resolution").val()
+            })
+        });
+
+        updateEventCall.done(function() {
+            location.reload()
+        });
+    }
+
+    function approveEvent() {
+        var approveCall = $.ajax({
+            type: "POST",
+            url: server_address + "backend/events/10/approve",
+            beforeSend: function (xhr) {
+                xhr.setRequestHeader('Authorization', 'Bearer ' + localStorage.getItem('token'));
+            }
+        });
+
+        approveCall.done(function () {
+            location.reload()
+        });
+    }
+
+    function submitPrediction() {
+        var submitCall = $.ajax({
+            type: "POST",
+            contentType: "application/json",
+            url: server_address + "backend/submitPrediction",
+            beforeSend: function (xhr) {
+                xhr.setRequestHeader('Authorization', 'Bearer ' + localStorage.getItem('token'));
+            },
+            data: JSON.stringify({
+                event_id: 10,
+                my_prediction: $("#my_prediction").val()
+            })
+        });
+
+        submitCall.done(function() {
+            location.reload()
+        });
+    }
+
+    function resolve(result) {
+        if (!confirm("Are you sure? This can't be undone")) {
+            return
+        }
+
+        var resolveCall = $.ajax({
+            type: "POST",
+            contentType: "application/json",
+            url: server_address + "backend/resolveEvent",
+            beforeSend: function (xhr) {
+                xhr.setRequestHeader('Authorization', 'Bearer ' + localStorage.getItem('token'));
+            },
+            data: JSON.stringify({
+                event_id: 10,
+                result: result
+            })
+        });
+
+        resolveCall.done(function() {
+            location.reload()
+        });
+    }
+
+    $(document).ready( function () {
+        $("#homeLink").prop("href", server_address + "index.html")
+        $("#leaderboardLink").prop("href", server_address + "leaderboard.html")
+        $("#aboutLink").prop("href", server_address + "about.html")
+
+        var getEventCall = $.ajax({
+            type: "GET",
+            url: server_address + "backend/events/10",
+            beforeSend: function (xhr) {
+                xhr.setRequestHeader('Authorization', 'Bearer ' + localStorage.getItem('token'));
+            }
+        });
+
+        getEventCall.done(function (event) {
+            if (event.average_prediction > 0) {
+                event.average_prediction *= 100
+                event.average_prediction += "%"
+            }
+            if (event.my_prediction > 0) {
+                event.my_prediction *= 100
+                event.my_prediction += "%"
+            }
+
+            event.date_start = convertDatetime(event.date_start)
+            event.date_close = convertDatetime(event.date_close)
+            event.date_resolve = convertDatetime(event.date_resolve)
+
+            var select = $("#category")[0]
+            for (option of event.selectable_categories) {
+                select.add(new Option(option[1], option[0]))
+            }            
+
+            var getGuessesCall
+            if (event.my_prediction != undefined) {
+                getGuessesCall = $.ajax({
+                    type: "GET",
+                    url: server_address + "backend/events/10/guesses",
+                    beforeSend: function (xhr) {
+                        xhr.setRequestHeader('Authorization', 'Bearer ' + localStorage.getItem('token'));
+                    }
+                });
+
+                if (parseFloat(event.my_prediction) >= parseFloat(event.average_prediction)) {
+                    $("#my_prediction").css('color', 'lawnGreen')
+                }
+                else {
+                    $("#my_prediction").css('color', 'red')
+                }
+                $("#my_prediction").addClass("form-control-plaintext")
+                $("#my_prediction").prop("readonly", true)
+            }
+            else {
+                dt = new Date()
+                if (event.approved == 1 && new Date(event.date_close) > dt && new Date(event.date_start) < dt) {
+                    $("#submitGuess").prop("hidden", false)
+                }
+            }
+            
+            if (event.approved == 0) {
+                $("#approveEvent").prop("hidden", false)
+            }
+
+            var result;
+            if (event.result == 1 || event.result == 0) {
+                if (event.result == 1) {
+                    result = "Yes"
+                    $("#result").css('color', 'lawnGreen')
+                } 
+                else if (event.result == 0) {
+                    result = "No"
+                    $("#result").css('color', 'red')
+                }
+                $("#dateResolved").prop("hidden", false)
+                $("#dateResolved").val("Resolved " + event.date_resolved)
+                $("#my_prediction").addClass("form-control-plaintext")
+                $("#my_prediction").prop("placeholder", "None")
+            }
+            else {
+                result = "Unresolved"
+                $("#result").css('font-weight', '300')
+            }
+
+            if (event.editable) {
+                $("#update").prop("hidden", false)
+                $("#resolveYes").prop("hidden", false)
+                $("#resolveNo").prop("hidden", false)
+
+                $("#description").prop("readonly", false)
+                $("#date_start").prop("readonly", false)
+                $("#date_close").prop("readonly", false)
+                $("#date_resolve").prop("readonly", false)
+                $("#resolution").prop("readonly", false)
+            }
+
+            $("#description").val(event.description)
+            $("#date_start").val(event.date_start)
+            $("#date_close").val(event.date_close)
+            $("#date_resolve").val(event.date_resolve)
+            $("#resolution").val(event.resolution)
+            $("#result").val(result)
+            $("#prediction_count").val(event.prediction_count)
+            $("#my_prediction").val(event.my_prediction)
+
+            $('#category option').filter(function() {
+                return $(this).text() === event.category;
+            }).prop('selected', true);
+
+            if (event.average_prediction == undefined) {
+                $("#average_prediction").val("Revealed when you make your guess")
+                $("#average_prediction").css("font-style", "italic")
+                $("#average_prediction").css("font-weight", "300")
+            }
+            else {
+                $("#average_prediction").val(Math.round(parseFloat(event.average_prediction) * 100) / 100 + "%")
+            }
+            
+            if (event.my_prediction != undefined) {
+                getGuessesCall.done(function (guesses) {
+                    for (guess of guesses) {
+                        guess[2] = convertDatetime(guess[2])
+                        guess[1] = Math.round(guess[1] * 100) / 100
+                        guess[3] = Math.round(guess[3] * 10000) / 100 + "%"
+                        if (guess[4] != undefined) {
+                            guess[4] = Math.round(guess[4] * 100) / 100
+                        }
+                    }
+
+                    $('#guessesTable').DataTable({
+                        data: guesses,
+                        columns: [
+                            { title: "Username", data: 0 },
+                            { title: "Rating", data: 1 },
+                            { title: "Datetime", data: 2 },
+                            { title: "Guess", data: 3 },
+                            { title: "Rating change", data: 4 }
+                        ]
+                    });
+                    
+                    $('#guessesTable').prop("hidden", false)
+                });
+            }
+        });
+    });
+</script>

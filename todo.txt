@@ -1,0 +1,18 @@
+Leaderboard
+About
+Discord link?
+User profile
+Rating history on profile page
+Overview accessible without logging in
+Compare rating history with other user
+
+INDEX
+Not fetching ALL resolved events?
+
+NEW/UPDATE EVENT
+Handle bad request
+
+
+MAYBE
+Approver automatically becomes resolver
+Admin contact info (discord?) visible on their profile page
