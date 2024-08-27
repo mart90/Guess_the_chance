@@ -20,10 +20,9 @@ def set_new_ratings(users, result):
             if user.kfactor < 0.2:
                 user.kfactor = 0.2
 
-    zero_sum_compensation = mean([u.new_rating - u.rating for u in users])
-    print(zero_sum_compensation)
+    #zero_sum_compensation = mean([u.new_rating - u.rating for u in users])
 
     for user in users:
-        user.new_rating -= zero_sum_compensation
+        #user.new_rating -= zero_sum_compensation
         user.rating_gained = user.new_rating - user.rating
         user.rating = user.new_rating
