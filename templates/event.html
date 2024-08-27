@@ -237,6 +237,8 @@
                         xhr.setRequestHeader('Authorization', 'Bearer ' + localStorage.getItem('token'));
                     }
                 });
+                
+                $("#my_prediction").val(Math.round(parseFloat(event.my_prediction) * 100) / 100 + "%")
 
                 if (parseFloat(event.my_prediction) >= parseFloat(event.average_prediction)) {
                     $("#my_prediction").css('color', 'lawnGreen')
@@ -297,10 +299,6 @@
             $("#resolution").val(event.resolution)
             $("#result").val(result)
             $("#prediction_count").val(event.prediction_count)
-
-            if (event.my_prediction != undefined) {
-                $("#my_prediction").val(Math.round(parseFloat(event.my_prediction) * 100) / 100 + "%")
-            }
 
             $('#category option').filter(function() {
                 return $(this).text() === event.category;
