@@ -197,7 +197,7 @@
             expires_at.setMinutes(expires_at.getHours() - 23);
 
             if (current_date > expires_at){
-                this.refreshToken();
+                refreshToken();
             }
         }
 

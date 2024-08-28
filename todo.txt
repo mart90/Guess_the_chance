@@ -1,3 +1,5 @@
+Default sort guesses by guess
+
 Discord link?
 User profile
 Rating history on profile page
