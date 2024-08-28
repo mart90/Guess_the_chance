@@ -15,10 +15,11 @@ mysql.query("""
         ec.discord_role_id 
     FROM event e 
     JOIN event_category ec ON e.category_id = ec.id
-    WHERE e.date_close <= (CURRENT_TIMESTAMP + INTERVAL 28 HOUR)""")
+    WHERE 
+        e.discord_notified = 0
+        e.date_close <= (CURRENT_TIMESTAMP + INTERVAL 60 HOUR)""")
 
 result = mysql.cursor.fetchall()
-mysql.commit_and_close()
 
 for row in result:
     event_name = row[1]
@@ -30,3 +31,7 @@ for row in result:
         "username": username
     }
     requests.post(notify_webhook, data=json.dumps(data), headers={"Content-Type": "application/json"})
+
+    mysql.query("UPDATE event SET discord_notified = 1 WHERE id = %s", (row[0]))
+
+mysql.commit_and_close()
