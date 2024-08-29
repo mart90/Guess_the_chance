@@ -45,7 +45,7 @@ def login():
     mysql.commit_and_close()
 
     if check_password_hash(result[1], auth.password):
-        expires_at = datetime.datetime.utcnow() + datetime.timedelta(hours=24)
+        expires_at = datetime.datetime.utcnow() + datetime.timedelta(days=7)
         token = jwt.encode({
             'user_id': user.id,
             'exp': expires_at
@@ -78,7 +78,7 @@ def register():
 @app.route("/backend/refresh_token", methods=["GET"])
 @token_required
 def refresh_token(current_user):
-    expires_at = datetime.datetime.utcnow() + datetime.timedelta(hours=24)
+    expires_at = datetime.datetime.utcnow() + datetime.timedelta(days=7)
     token = jwt.encode({
         'user_id': current_user.id,
         'exp': expires_at
@@ -377,7 +377,7 @@ def create_event(current_user):
     mysql = MySQL().connect(mysql_ip, mysql_db)
 
     approved = 1 if current_user.is_admin else 0
-        
+
     mysql.query("""
         INSERT INTO event (
             description, 

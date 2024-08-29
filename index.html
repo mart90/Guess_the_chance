@@ -193,10 +193,10 @@
         }
         else {
             var expires_at = new Date(localStorage.getItem('token_expires_at'));
-            var current_date = new Date();
-            expires_at.setMinutes(expires_at.getHours() - 23);
+            var compare_date = new Date()
+            compare_date.setDate(compare_date.getDate() + 5);
 
-            if (current_date > expires_at){
+            if (compare_date > expires_at){
                 refreshToken();
             }
         }
