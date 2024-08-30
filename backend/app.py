@@ -107,18 +107,21 @@ def get_events(current_user):
             (SELECT predicted_probability FROM prediction p WHERE p.event_id = e.id AND user_id = %s) as my_prediction,
             e.id,
             e.date_resolved,
-            e.approved
+            e.approved,
+            pa.user_id as uid_passed
         FROM event e
-        JOIN event_category ec on ec.id = e.category_id
+        JOIN event_category ec ON ec.id = e.category_id
+        LEFT JOIN pass pa ON pa.user_id = %s AND pa.event_id = e.id
         WHERE
             (e.approved = 1 OR e.suggested_by = %s OR 1 = %s)
-            AND e.result IS NULL""", (current_user.id, current_user.id, current_user.is_admin))
+            AND e.result IS NULL""", (current_user.id, current_user.id, current_user.id, current_user.is_admin))
     
     result = [list(row) for row in mysql.cursor.fetchall()]
 
     for row in result:
-        if row[8] is None and row[5] is None:
-            row[7] = None        
+        if row[8] is None and row[5] is None and row[12] is None:
+            row[7] = None
+        del row[-1]      
 
     mysql.commit_and_close()
     return jsonify(result)
@@ -174,11 +177,12 @@ def get_event(current_user, id):
             (SELECT AVG(predicted_probability) FROM prediction p WHERE p.event_id = e.id) as average_prediction,
             (SELECT predicted_probability FROM prediction p WHERE p.event_id = e.id AND user_id = %s) as my_prediction,
             e.date_resolved,
-            e.approved
+            e.approved,
+            (SELECT user_id FROM pass WHERE user_id = %s AND event_id = %s) as uid_passed
         FROM event e
         JOIN event_category ec on ec.id = e.category_id
         WHERE
-            e.id = %s""", (current_user.id, id))
+            e.id = %s""", (current_user.id, current_user.id, id, id))
     
     event_result = list(mysql.cursor.fetchone())
 
@@ -195,11 +199,12 @@ def get_event(current_user, id):
         "resolution": event_result[5],
         "result": event_result[6],
         "prediction_count": event_result[7],
-        "average_prediction": event_result[8] if event_result[9] is not None or event_result[6] is not None else None,
+        "average_prediction": event_result[8] if event_result[9] is not None or event_result[6] is not None or event_result[12] is not None else None,
         "my_prediction": event_result[9],
         "editable": True if current_user.is_admin else False,
         "selectable_categories": categories,
-        "approved": event_result[11]
+        "approved": event_result[11],
+        "passed": True if event_result[12] is not None else False
     }
     
     mysql.commit_and_close()
@@ -254,7 +259,13 @@ def submit_prediction(current_user):
     result = mysql.cursor.fetchone()
     if result[0] < datetime.datetime.now():
         mysql.commit_and_close()
-        return ("Predictions for this event are closed", 403)
+        return ("Guessing for this event is closed", 403)
+    
+    mysql.query("SELECT user_id FROM pass WHERE user_id = %s AND event_id = %s", (current_user.id, body["event_id"]))
+    result = mysql.cursor.fetchone()
+    if result is not None:
+        mysql.commit_and_close()
+        return ("You can't guess for this event after passing", 403)
     
     mysql.query("SELECT predicted_probability FROM prediction WHERE event_id = %s AND user_id = %s",
                 (body["event_id"], current_user.id))
@@ -330,13 +341,14 @@ def get_event_guesses(current_user, id):
     mysql = MySQL().connect(mysql_ip, mysql_db)
 
     mysql.query("""
-        SELECT e.result, p.predicted_probability 
+        SELECT e.result, p.predicted_probability, pa.user_id 
         FROM event e
         LEFT JOIN prediction p ON e.id = p.event_id AND p.user_id = %s
-        WHERE e.id = %s""", (current_user.id, id))
+        LEFT JOIN pass pa on pa.event_id = e.id AND pa.user_id = %s
+        WHERE e.id = %s""", (current_user.id, current_user.id, id))
     
     result = mysql.cursor.fetchone()
-    if result[0] is None and result[1] is None:
+    if result[0] is None and result[1] is None and result[2] is None:
         mysql.commit_and_close()
         return ("Forbidden", 403)
 
@@ -441,3 +453,14 @@ def get_leaderboard(current_user):
     
     mysql.commit_and_close()
     return jsonify(users)
+
+
+@app.route("/backend/events/<id>/pass", methods=["POST"])
+@token_required
+def pass_on_event(current_user, id):    
+    mysql = MySQL().connect(mysql_ip, mysql_db)
+
+    mysql.query("INSERT INTO pass (user_id, event_id) VALUES (%s, %s)", (current_user.id, id))
+
+    mysql.commit_and_close()
+    return ("", 204)
