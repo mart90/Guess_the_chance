@@ -89,9 +89,10 @@
                 </div>
             </div>
         </form>
-        <div class="row mb-3 pt-2">
+        <div class="row mb-3 pt-3">
             <button id="submitGuess" hidden class="btn btn-success" onclick="submitPrediction()">Submit guess</button>
             <button id="approveEvent" hidden class="btn btn-primary" onclick="approveEvent()">Approve</button>
+            <button id="pass" hidden class="btn btn-danger" data-toggle="tooltip" onclick="pass()" title="Shows other players' guesses. You will not be able to guess on this event yourself">Pass</button>
             <div class="col-sm-10" style="margin-left: 58%">
                 <button id="update" hidden class="btn btn-primary btn-admin col-sm" onclick="update()">Update</button>
                 <button id="resolveYes" hidden class="btn btn-success btn-admin col-sm" onclick="resolve(1)">Resolve to Yes</button>
@@ -173,6 +174,20 @@
         });
     }
 
+    function pass() {
+        var passCall = $.ajax({
+            type: "POST",
+            url: server_address + "backend/events/{{eventId}}/pass",
+            beforeSend: function (xhr) {
+                xhr.setRequestHeader('Authorization', 'Bearer ' + localStorage.getItem('token'));
+            }
+        });
+
+        passCall.done(function() {
+            location.reload()
+        });
+    }
+
     function resolve(result) {
         if (!confirm("Are you sure? This can't be undone")) {
             return
@@ -242,8 +257,10 @@
                 select.add(new Option(option[1], option[0]))
             }            
 
+            var dt = new Date()
             var getGuessesCall
-            if (event.my_prediction != undefined) {
+
+            if (event.passed == 1 || event.my_prediction != undefined || new Date(event.date_close) < dt) {
                 getGuessesCall = $.ajax({
                     type: "GET",
                     url: server_address + "backend/events/{{eventId}}/guesses",
@@ -251,7 +268,9 @@
                         xhr.setRequestHeader('Authorization', 'Bearer ' + localStorage.getItem('token'));
                     }
                 });
-                
+            }
+
+            if (event.my_prediction != undefined) {                
                 $("#my_prediction").val(Math.round(parseFloat(event.my_prediction) * 100) / 100 + "%")
 
                 if (parseFloat(event.my_prediction) >= parseFloat(event.average_prediction)) {
@@ -264,9 +283,9 @@
                 $("#my_prediction").prop("readonly", true)
             }
             else {
-                dt = new Date()
-                if (event.approved == 1 && new Date(event.date_close) > dt && new Date(event.date_start) < dt) {
+                if (event.passed == 0 && event.approved == 1 && new Date(event.date_close) > dt && new Date(event.date_start) < dt) {
                     $("#submitGuess").prop("hidden", false)
+                    $("#pass").prop("hidden", false)
                 }
             }
 
@@ -327,7 +346,7 @@
                 $("#average_prediction").val(Math.round(parseFloat(event.average_prediction) * 100) / 100 + "%")
             }
             
-            if (event.my_prediction != undefined) {
+            if (event.passed == 1 || event.my_prediction != undefined || new Date(event.date_close) < dt) {
                 getGuessesCall.done(function (guesses) {
                     for (guess of guesses) {
                         guess[2] = convertDatetime(guess[2])
@@ -346,7 +365,8 @@
                             { title: "Datetime", data: 2 },
                             { title: "Guess", data: 3 },
                             { title: "Rating change", data: 4 }
-                        ]
+                        ],
+                        order: [[3, "desc"], [1, "desc"]]
                     });
                     
                     $('#guessesTable').prop("hidden", false)

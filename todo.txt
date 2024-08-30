@@ -1,6 +1,4 @@
-Default sort guesses by guess
-
-Discord link?
+Suggested by on event page
 User profile
 Rating history on profile page
 Overview accessible without logging in

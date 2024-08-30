@@ -4,11 +4,18 @@
 
 .btn {
     width: 150px;
-    margin-left: 17%
 }
 
+#submitGuess {
+    margin-left: 17%
+}
+    
 .btn-admin {
-    margin-left: 2% !important
+    margin-left: 1%
+}
+
+#pass {
+    margin-left: 1%
 }
 
 #dateResolved {
