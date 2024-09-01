@@ -78,7 +78,7 @@ def register():
 @app.route("/backend/refresh_token", methods=["GET"])
 @token_required
 def refresh_token(current_user):
-    expires_at = datetime.datetime.utcnow() + datetime.timedelta(days=7)
+    expires_at = datetime.datetime.now((datetime.UTC)) + datetime.timedelta(days=7)
     token = jwt.encode({
         'user_id': current_user.id,
         'exp': expires_at
@@ -257,7 +257,7 @@ def submit_prediction(current_user):
 
     mysql.query("SELECT date_close FROM event WHERE id = %s", (body["event_id"]))
     result = mysql.cursor.fetchone()
-    if result[0] < datetime.datetime.now():
+    if result[0] < datetime.datetime.now(datetime.UTC):
         mysql.commit_and_close()
         return ("Guessing for this event is closed", 403)
     
@@ -299,7 +299,7 @@ def resolve_event(current_user):
         
     mysql.query("SELECT date_close FROM event WHERE id = %s", (body["event_id"]))
     result = mysql.cursor.fetchone()
-    if result[0] > datetime.datetime.now():
+    if result[0] > datetime.datetime.now(datetime.UTC):
         mysql.commit_and_close()
         return ("Predictions for this event are not yet closed", 403)
     
