@@ -189,6 +189,13 @@ def get_event(current_user, id):
     mysql.query("SELECT id, name FROM event_category")
     categories = list(mysql.cursor.fetchall())
 
+    avg_prediction = round(event_result[8], 4) if \
+        event_result[8] is not None and (
+            event_result[9] is not None 
+            or event_result[6] is not None 
+            or event_result[12] is not None) \
+        else None
+
     event = {
         "category": event_result[0],
         "description": event_result[1],
@@ -199,7 +206,7 @@ def get_event(current_user, id):
         "resolution": event_result[5],
         "result": event_result[6],
         "prediction_count": event_result[7],
-        "average_prediction": event_result[8] if event_result[9] is not None or event_result[6] is not None or event_result[12] is not None else None,
+        "average_prediction": avg_prediction,
         "my_prediction": event_result[9],
         "editable": True if current_user.is_admin else False,
         "selectable_categories": categories,
