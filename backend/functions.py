@@ -2,7 +2,7 @@ from statistics import mean
 
 
 def set_new_ratings(users, result):
-    avg_prediction = round(mean([u.prediction for u in users]), 2)
+    avg_prediction = round(mean([u.prediction for u in users]), 4)
 
     for user in users:
         opponent_rating = mean([u.rating for u in users if u.id != user.id])
