@@ -53,8 +53,13 @@
         });
         
         leaderboardCall.done(function (leaderboard) {
+            for (user of leaderboard) {
+                user["rating"] = Math.round(user["rating"] * 100) / 100
+            }
+            
             $("#leaderboardTable").DataTable({
                 data: leaderboard,
+                pageLength: 50,
                 columns: [
                     { title: "Position", data: "position" },
                     { title: "Username", data: "username" },

@@ -72,24 +72,25 @@
             event[10] = convertDatetime(event[10])
 
             if (event[11] == 0) {
-                event[12] = "PENDING APPROVAL"
+                event[12] = "Pending approval"
             }
-            else if (new Date(event[2]) > new Date()) {
-                event[12] = "NOT STARTED"
+            else if (new Date(event[2] + "Z") > new Date()) {
+                event[12] = "Not started"
             }
-            else if (new Date(event[3]) > new Date()) {
-                event[12] = "OPEN"
+            else if (new Date(event[3] + "Z") > new Date()) {
+                event[12] = "Open"
             }
             else if (event[5] != undefined) {
-                event[12] = "RESOLVED"
+                event[12] = "Resolved"
             }
             else {
-                event[12] = "CLOSED"
+                event[12] = "Closed"
             }
         }
 
         var table = $('#eventsTable').DataTable({
             destroy: true,
+            pageLength: 50,
             data: events,    
             columnDefs: [
             {
@@ -115,31 +116,36 @@
                 var status = data[12];
                 var $statusCell = $('td', row).eq(2);
 
-                if (status == "OPEN") {
+                if (status == "Open") {
                     $statusCell.css('color', 'lawnGreen');
                 } 
-                else if (status == "CLOSED") {
+                else if (status == "Closed") {
                     $statusCell.css('color', 'red');
                 } 
-                else if (status == "RESOLVED") {
+                else if (status == "Resolved") {
                     $statusCell.css('color', 'cyan');
                 }
-                else if (status == "NOT STARTED") {
+                else if (status == "Not started") {
                     $statusCell.css('color', 'orange');
                 }
-                else if (status == "PENDING APPROVAL") {
+                else if (status == "Pending approval") {
                     $statusCell.css('color', 'cyan');
                 }
             }
         });
 
-        if (events[0][11] == "RESOLVED") {
+        console.log(events[0])
+        if (events[0][12] == "Resolved") {
             table.column(6).visible(true);
             table.column(10).visible(true);
+            table.column(4).visible(false);
+            table.column(5).visible(false);
         }
         else {
             table.column(6).visible(false);
             table.column(10).visible(false);
+            table.column(4).visible(true);
+            table.column(5).visible(true);
         }
 
         $('#eventsTable tbody').off('click', 'tr').on('click', 'tr', function() {

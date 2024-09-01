@@ -260,7 +260,7 @@
             var dt = new Date()
             var getGuessesCall
 
-            if (event.passed == 1 || event.my_prediction != undefined || new Date(event.date_close) < dt) {
+            if (event.passed == 1 || event.my_prediction != undefined || new Date(event.date_close + "Z") < dt) {
                 getGuessesCall = $.ajax({
                     type: "GET",
                     url: server_address + "backend/events/{{eventId}}/guesses",
@@ -283,7 +283,7 @@
                 $("#my_prediction").prop("readonly", true)
             }
             else {
-                if (event.passed == 0 && event.approved == 1 && new Date(event.date_close) > dt && new Date(event.date_start) < dt) {
+                if (event.passed == 0 && event.approved == 1 && new Date(event.date_close + "Z") > dt && new Date(event.date_start + "Z") < dt) {
                     $("#submitGuess").prop("hidden", false)
                     $("#pass").prop("hidden", false)
                 }
@@ -346,7 +346,7 @@
                 $("#average_prediction").val(Math.round(parseFloat(event.average_prediction) * 100) / 100 + "%")
             }
             
-            if (event.passed == 1 || event.my_prediction != undefined || new Date(event.date_close) < dt) {
+            if (event.passed == 1 || event.my_prediction != undefined || new Date(event.date_close + "Z") < dt) {
                 getGuessesCall.done(function (guesses) {
                     for (guess of guesses) {
                         guess[2] = convertDatetime(guess[2])
