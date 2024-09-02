@@ -26,3 +26,7 @@ def set_new_ratings(users, result):
         #user.new_rating -= zero_sum_compensation
         user.rating_gained = user.new_rating - user.rating
         user.rating = user.new_rating
+
+
+def remove_timezone(dt):
+    return dt.replace(tzinfo=None)
