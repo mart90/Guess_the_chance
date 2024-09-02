@@ -266,7 +266,7 @@ def submit_prediction(current_user):
 
     mysql.query("SELECT date_close FROM event WHERE id = %s", (body["event_id"]))
     result = mysql.cursor.fetchone()
-    if result[0] < datetime.now(timezone.utc):
+    if result[0] < datetime.now():
         mysql.commit_and_close()
         return ("Guessing for this event is closed", 403)
     
@@ -308,7 +308,7 @@ def resolve_event(current_user):
         
     mysql.query("SELECT date_close FROM event WHERE id = %s", (body["event_id"]))
     result = mysql.cursor.fetchone()
-    if result[0] > datetime.now(timezone.utc):
+    if result[0] > datetime.now():
         mysql.commit_and_close()
         return ("Predictions for this event are not yet closed", 403)
     
