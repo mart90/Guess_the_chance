@@ -3,6 +3,7 @@ import os
 import random
 from datetime import datetime
 from datetime import timedelta
+from datetime import timezone
 from flask import Flask, request, Response, make_response, jsonify, render_template
 from werkzeug.security import generate_password_hash, check_password_hash
 from mysql import *
@@ -46,7 +47,7 @@ def login():
     mysql.commit_and_close()
 
     if check_password_hash(result[1], auth.password):
-        expires_at = datetime.now(datetime.UTC) + timedelta(days=7)
+        expires_at = datetime.now(timezone.utc) + timedelta(days=7)
         token = jwt.encode({
             'user_id': user.id,
             'exp': expires_at
@@ -79,7 +80,7 @@ def register():
 @app.route("/backend/refresh_token", methods=["GET"])
 @token_required
 def refresh_token(current_user):
-    expires_at = datetime.now((datetime.UTC)) + timedelta(days=7)
+    expires_at = datetime.now((timezone.utc)) + timedelta(days=7)
     token = jwt.encode({
         'user_id': current_user.id,
         'exp': expires_at
@@ -265,7 +266,7 @@ def submit_prediction(current_user):
 
     mysql.query("SELECT date_close FROM event WHERE id = %s", (body["event_id"]))
     result = mysql.cursor.fetchone()
-    if result[0] < datetime.now(datetime.UTC):
+    if result[0] < datetime.now(timezone.utc):
         mysql.commit_and_close()
         return ("Guessing for this event is closed", 403)
     
@@ -307,7 +308,7 @@ def resolve_event(current_user):
         
     mysql.query("SELECT date_close FROM event WHERE id = %s", (body["event_id"]))
     result = mysql.cursor.fetchone()
-    if result[0] > datetime.now(datetime.UTC):
+    if result[0] > datetime.now(timezone.utc):
         mysql.commit_and_close()
         return ("Predictions for this event are not yet closed", 403)
     
