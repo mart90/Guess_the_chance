@@ -326,7 +326,7 @@ def resolve_event(current_user):
     users = [] 
     for row in result:
         user = User(row[0], None, row[2], row[3], None)
-        user.prediction = row[1]
+        user.prediction = round(row[1], 4)
         users.append(user)
 
     set_new_ratings(users, body["result"])
