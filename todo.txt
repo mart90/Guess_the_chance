@@ -1,3 +1,4 @@
+Rating system not negative sum
 Suggested by on event page
 User profile
 Rating history on profile page

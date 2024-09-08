@@ -290,7 +290,7 @@ def submit_prediction(current_user):
 
     mysql.query("""
         INSERT INTO prediction (event_id, user_id, predicted_probability)
-        VALUES (%s, %s, %s)""", (body["event_id"], current_user.id, round(float(prediction) / 100, 2)))
+        VALUES (%s, %s, %s)""", (body["event_id"], current_user.id, round(float(prediction) / 100, 4)))
 
     mysql.commit_and_close()
     return ("", 204)
