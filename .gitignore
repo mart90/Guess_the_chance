@@ -1,7 +1,7 @@
 .idea
 .vscode
 backend/__pycache__
+backend/ratings/__pycache__
 backend/config.py
-backend/rating_sim.py
 templates/event_test.html
 js/serverAddress.js

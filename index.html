@@ -112,7 +112,7 @@
                 { title: "Average guess", data: 7 },
                 { title: "Result", data: 5 },
             ],
-            order: [[3, "desc"], [5, "asc"]],
+            order: events[0][12] == "Resolved" ? [5, "desc"] : [[3, "desc"], [5, "asc"]],
             createdRow: function(row, data, dataIndex) {
                 var status = data[12];
                 var $statusCell = $('td', row).eq(2);
@@ -135,7 +135,6 @@
             }
         });
 
-        console.log(events[0])
         if (events[0][12] == "Resolved") {
             table.column(6).visible(true);
             table.column(10).visible(true);

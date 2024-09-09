@@ -316,7 +316,8 @@ def resolve_event(current_user):
             p.user_id, 
             p.predicted_probability,
             u.rating,
-            u.kfactor
+            u.kfactor,
+            u.public_rating
         FROM prediction p
         JOIN user u on u.id = p.user_id
         WHERE p.event_id = %s""", (body["event_id"]))
@@ -327,14 +328,13 @@ def resolve_event(current_user):
     for row in result:
         user = User(row[0], None, row[2], row[3], None)
         user.prediction = round(row[1], 4)
+        user.public_rating = row[4]
         users.append(user)
 
     set_new_ratings(users, body["result"])
 
     for user in users:
-        user.update_rating(mysql)
-        mysql.query("UPDATE prediction SET new_rating = %s, rating_gained = %s WHERE user_id = %s AND event_id = %s",
-                    (user.new_rating, user.rating_gained, user.id, body["event_id"]))
+        user.update_rating(mysql, body["event_id"])
     
     mysql.query("UPDATE event SET result = %s, date_resolved = CURRENT_TIMESTAMP WHERE id = %s",
                 (body["result"], body["event_id"]))
@@ -362,11 +362,11 @@ def get_event_guesses(current_user, id):
 
     mysql.query("""
         SELECT 
-            u.name, 
-            u.rating,
+            u.name,
+            u.public_rating,
             p.date_added, 
             p.predicted_probability,
-            p.rating_gained
+            p.public_rating_gained
         FROM prediction p
         JOIN user u on u.id = p.user_id
         WHERE p.event_id = %s""", (id))
@@ -443,7 +443,7 @@ def approve_event(current_user, id):
 def get_leaderboard(current_user):    
     mysql = MySQL().connect(mysql_ip, mysql_db)
     mysql.query("""
-        SELECT u.name, u.rating, COUNT(*)
+        SELECT u.name, u.public_rating, COUNT(*)
         FROM user u
         JOIN prediction p ON p.user_id = u.id
         GROUP BY u.id
