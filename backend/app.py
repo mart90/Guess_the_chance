@@ -447,7 +447,7 @@ def get_leaderboard(current_user):
         FROM user u
         JOIN prediction p ON p.user_id = u.id
         GROUP BY u.id
-        ORDER BY rating DESC, COUNT(*) DESC""")
+        ORDER BY u.public_rating DESC, COUNT(*) DESC""")
     
     result = mysql.cursor.fetchall()
 
@@ -456,7 +456,7 @@ def get_leaderboard(current_user):
         users.append({
             "position": i + 1,
             "username": result[i][0],
-            "rating": result[i][1],
+            "rating": result[i][1] if result[i][1] > 0 else 0,
             "guesses": result[i][2]
         })
     
