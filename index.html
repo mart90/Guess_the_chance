@@ -71,22 +71,6 @@
             event[3] = convertDatetime(event[3])
             event[4] = convertDatetime(event[4])
             event[10] = convertDatetime(event[10])
-
-            if (event[11] == 0) {
-                event[12] = "Pending approval"
-            }
-            else if (new Date(event[2] + "Z") > new Date()) {
-                event[12] = "Not started"
-            }
-            else if (new Date(event[3] + "Z") > new Date()) {
-                event[12] = "Open"
-            }
-            else if (event[5] != undefined) {
-                event[12] = "Resolved"
-            }
-            else {
-                event[12] = "Closed"
-            }
         }
 
         var table = $('#eventsTable').DataTable({

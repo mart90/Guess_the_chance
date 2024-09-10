@@ -16,7 +16,8 @@ mysql.query("""
     FROM event e 
     JOIN event_category ec ON e.category_id = ec.id
     WHERE 
-        e.discord_notified = 0
+        e.notify_discord = 1
+        AND e.discord_notified = 0
         AND e.date_close > CURRENT_TIMESTAMP
         AND e.date_close <= (CURRENT_TIMESTAMP + INTERVAL 28 HOUR)""")
 

@@ -121,7 +121,20 @@ def get_events(current_user):
     for row in result:
         if row[8] is None and row[5] is None and row[12] is None:
             row[7] = None
-        del row[-1]      
+        del row[-1]
+
+        if not row[11]:
+            status = "Pending approval"
+        elif row[5] is not None:
+            status = "Resolved"
+        elif as_utc(row[2]) > datetime.now(timezone.utc):
+            status = "Not started"
+        elif as_utc(row[3]) < datetime.now(timezone.utc):
+            status = "Closed"
+        else:
+            status = "Open"
+
+        row.append(status)
 
     mysql.commit_and_close()
     return jsonify(result)
@@ -143,13 +156,15 @@ def get_resolved_events(current_user):
             (SELECT AVG(predicted_probability) FROM prediction p WHERE p.event_id = e.id) as average_prediction,
             (SELECT predicted_probability FROM prediction p WHERE p.event_id = e.id AND user_id = %s) as my_prediction,
             e.id,
-            e.date_resolved
+            e.date_resolved,
+            NULL,
+            "Resolved" as status
         FROM event e
         JOIN event_category ec on ec.id = e.category_id
         WHERE
             e.result IS NOT NULL""", (current_user.id))
     
-    result = [list(row) for row in mysql.cursor.fetchall()]   
+    result = [list(row) for row in mysql.cursor.fetchall()] 
 
     mysql.commit_and_close()
     return jsonify(result)
@@ -178,9 +193,12 @@ def get_event(current_user, id):
             (SELECT predicted_probability FROM prediction p WHERE p.event_id = e.id AND user_id = %s) as my_prediction,
             e.date_resolved,
             e.approved,
-            (SELECT user_id FROM pass WHERE user_id = %s AND event_id = %s) as uid_passed
+            (SELECT user_id FROM pass WHERE user_id = %s AND event_id = %s) as uid_passed,
+            e.notify_discord,
+            u.name as suggested_by
         FROM event e
         JOIN event_category ec on ec.id = e.category_id
+        JOIN user u on u.id = e.suggested_by
         WHERE
             e.id = %s""", (current_user.id, current_user.id, id, id))
     
@@ -196,6 +214,8 @@ def get_event(current_user, id):
             or event_result[12] is not None) \
         else None
 
+    utc_datetime = datetime.now(timezone.utc)
+
     event = {
         "category": event_result[0],
         "description": event_result[1],
@@ -208,10 +228,17 @@ def get_event(current_user, id):
         "prediction_count": event_result[7],
         "average_prediction": avg_prediction,
         "my_prediction": event_result[9],
-        "editable": True if current_user.is_admin else False,
+        "editable": current_user.is_admin,
         "selectable_categories": categories,
         "approved": event_result[11],
-        "passed": True if event_result[12] is not None else False
+        "passed": event_result[12] is not None,
+        "notify_discord": event_result[13],
+        "suggested_by": event_result[14],
+        "can_guess": event_result[9] is None \
+            and event_result[11] 
+            and event_result[12] is None 
+            and as_utc(event_result[3]) > utc_datetime
+            and as_utc(event_result[2]) < utc_datetime
     }
     
     mysql.commit_and_close()
@@ -241,7 +268,8 @@ def update_event(current_user, id):
             date_start = %s,
             date_close = %s,
             date_resolve = %s,
-            resolution = %s
+            resolution = %s,
+            notify_discord = %s
         WHERE id = %s""", (
             body["description"],
             body["category"],
@@ -249,6 +277,7 @@ def update_event(current_user, id):
             body["date_close"],
             body["date_resolve"],
             body["resolution"],
+            body["notify_discord"],
             id
         ))
 
@@ -265,7 +294,7 @@ def submit_prediction(current_user):
     mysql.query("SELECT date_close FROM event WHERE id = %s", (body["event_id"]))
     result = mysql.cursor.fetchone()
 
-    if result[0].replace(tzinfo=timezone.utc) < datetime.now(timezone.utc):
+    if as_utc(result[0]) < datetime.now(timezone.utc):
         mysql.commit_and_close()
         return ("Guessing for this event is closed", 403)
     
@@ -307,7 +336,7 @@ def resolve_event(current_user):
         
     mysql.query("SELECT date_close FROM event WHERE id = %s", (body["event_id"]))
     result = mysql.cursor.fetchone()
-    if result[0].replace(tzinfo=timezone.utc) > datetime.now(timezone.utc):
+    if as_utc(result[0]) > datetime.now(timezone.utc):
         mysql.commit_and_close()
         return ("Predictions for this event are not yet closed", 403)
     
@@ -407,8 +436,9 @@ def create_event(current_user):
             resolution,
             date_start,
             date_close,
-            date_resolve) 
-        VALUES (%s, %s, %s, %s, %s, %s, %s, %s)""", (
+            date_resolve,
+            notify_discord)
+        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)""", (
             body["description"],
             current_user.id,
             body["category_id"],
@@ -416,7 +446,8 @@ def create_event(current_user):
             body["resolution"],
             body["date_start"],
             body["date_close"],
-            body["date_resolve"]
+            body["date_resolve"],
+            body["notify_discord"]
         ))
 
     id = mysql.cursor.lastrowid

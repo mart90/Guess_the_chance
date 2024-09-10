@@ -65,6 +65,18 @@
                 </div>
             </div>
             <div class="row mb-3">
+                <label class="col-form-label col-sm-2 text-end" for="notify_discord">Notify discord</label>
+                <div class="col-sm-10">
+                    <input type="checkbox" value="" class="form-check-input" data-toggle="tooltip" style="margin-top: 1.07%" id="notify_discord" title="If checked, a bot will post a message in the notifications channel ~28h before the close date">
+                </div>
+            </div>
+            <div class="row mb-3">
+                <label class="col-form-label col-sm-2 text-end" for="suggested_by">Suggested by</label>
+                <div class="col-sm-10">
+                    <input type="text" readonly class="form-control-plaintext" id="suggested_by">
+                </div>
+            </div>
+            <div class="row mb-3">
                 <label class="col-form-label col-sm-2 text-end" for="result">Result</label>
                 <div class="col-sm-10">
                     <input type="text" readonly class="form-control-plaintext" id="result">
@@ -133,7 +145,8 @@
                 date_start: $("#date_start").val(),
                 date_close: $("#date_close").val(),
                 date_resolve: $("#date_resolve").val(),
-                resolution: $("#resolution").val()
+                resolution: $("#resolution").val(),
+                notify_discord: $("#notify_discord").is(":checked")
             })
         });
 
@@ -261,7 +274,7 @@
             var dt = new Date()
             var getGuessesCall
 
-            if (event.passed == 1 || event.my_prediction != undefined || new Date(event.date_close + "Z") < dt) {
+            if (!event.can_guess) {
                 getGuessesCall = $.ajax({
                     type: "GET",
                     url: server_address + "backend/events/{{eventId}}/guesses",
@@ -283,11 +296,9 @@
                 $("#my_prediction").addClass("form-control-plaintext")
                 $("#my_prediction").prop("readonly", true)
             }
-            else {
-                if (event.passed == 0 && event.approved == 1 && new Date(event.date_close + "Z") > dt && new Date(event.date_start + "Z") < dt) {
-                    $("#submitGuess").prop("hidden", false)
-                    $("#pass").prop("hidden", false)
-                }
+            else if (event.can_guess) {
+                $("#submitGuess").prop("hidden", false)
+                $("#pass").prop("hidden", false)
             }
 
             var result;
@@ -333,6 +344,8 @@
             $("#resolution").val(event.resolution)
             $("#result").val(result)
             $("#prediction_count").val(event.prediction_count)
+            $("#suggested_by").val(event.suggested_by)
+            $("#notify_discord").prop("checked", event.notify_discord)
 
             $('#category option').filter(function() {
                 return $(this).text() === event.category;
@@ -347,7 +360,7 @@
                 $("#average_prediction").val(Math.round(parseFloat(event.average_prediction) * 100) / 100 + "%")
             }
             
-            if (event.passed == 1 || event.my_prediction != undefined || new Date(event.date_close + "Z") < dt) {
+            if (!event.can_guess) {
                 getGuessesCall.done(function (guesses) {
                     for (guess of guesses) {
                         guess[2] = convertDatetime(guess[2])

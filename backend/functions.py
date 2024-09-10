@@ -1,5 +1,6 @@
 from statistics import mean
 from config import config
+from datetime import timezone
 
 
 def set_new_ratings(users, result):
@@ -69,3 +70,7 @@ def set_new_ratings(users, result):
 
 def remove_timezone(dt):
     return dt.replace(tzinfo=None)
+
+
+def as_utc(dt):
+    return dt.replace(tzinfo=timezone.utc)

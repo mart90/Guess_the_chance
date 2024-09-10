@@ -60,6 +60,12 @@
                     <textarea class="form-control" id="resolution" rows="5" placeholder="A fact-based, independently verifiable way to determine whether this should resolve to Yes or No"></textarea>
                 </div>
             </div>
+            <div class="row mb-3">
+                <label class="col-form-label col-sm-2 text-end" for="notify_discord">Notify discord</label>
+                <div class="col-sm-10">
+                    <input type="checkbox" value="" class="form-check-input" data-toggle="tooltip" style="margin-top: 1.07%" id="notify_discord" title="If checked, a bot will post a message in the notifications channel ~28h before the close date">
+                </div>
+            </div>
         </form>
         <div class="row mb-3 pt-2">
             <button id="submit" class="btn btn-success" onclick="createNewEvent()">Submit (for approval)</button>
@@ -82,7 +88,8 @@
                 date_start: $("#date_start").val(),
                 date_close: $("#date_close").val(),
                 date_resolve: $("#date_resolve").val(),
-                resolution: $("#resolution").val()
+                resolution: $("#resolution").val(),
+                notify_discord: $("#notify_discord").is(":checked")
             })
         });
 
