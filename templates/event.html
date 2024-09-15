@@ -376,6 +376,11 @@
                     var table = $('#guessesTable').DataTable({
                         data: guesses,
                         pageLength: 50,
+                        columnDefs: [{
+                            target: 0,
+                            visible: false,
+                            searchable: false
+                        }],
                         columns: [
                             { title: "Id", data: 5 },
                             { title: "Username", data: 0 },
@@ -384,7 +389,7 @@
                             { title: "Guess", data: 3 },
                             { title: "Rating change", data: 4 }
                         ],
-                        order: [[3, "desc"], [1, "desc"]]
+                        order: [[4, "desc"], [2, "desc"]]
                     });
                     
                     $('#guessesTable').prop("hidden", false)
