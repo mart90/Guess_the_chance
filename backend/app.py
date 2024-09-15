@@ -401,7 +401,8 @@ def get_event_guesses(current_user, id):
             u.public_rating,
             p.date_added, 
             p.predicted_probability,
-            p.public_rating_gained
+            p.public_rating_gained,
+            u.id
         FROM prediction p
         JOIN user u on u.id = p.user_id
         WHERE p.event_id = %s""", (id))

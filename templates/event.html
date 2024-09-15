@@ -373,10 +373,11 @@
                         }
                     }
 
-                    $('#guessesTable').DataTable({
+                    var table $('#guessesTable').DataTable({
                         data: guesses,
                         pageLength: 50,
                         columns: [
+                            { title: "Id", data: 5 },
                             { title: "Username", data: 0 },
                             { title: "Rating", data: 1 },
                             { title: "Datetime", data: 2 },
@@ -387,6 +388,11 @@
                     });
                     
                     $('#guessesTable').prop("hidden", false)
+
+                    $('#guessesTable tbody').off('click', 'tr').on('click', 'tr', function() {
+                        var id = table.row(this).data()[5];
+                        window.location.href = server_address + 'users/' + id;
+                    });
                 });
             }
         });
