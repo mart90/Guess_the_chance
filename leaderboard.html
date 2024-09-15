@@ -28,6 +28,7 @@
             <table id="leaderboardTable" class="display table table-striped" >
                 <thead>
                     <tr>
+                        <th>Id</th>
                         <th>Position</th>
                         <th>Username</th>
                         <th>Guesses</th>
@@ -58,16 +59,27 @@
                 user["rating"] = Math.round(user["rating"] * 100) / 100
             }
             
-            $("#leaderboardTable").DataTable({
+            var table = $("#leaderboardTable").DataTable({
                 data: leaderboard,
                 pageLength: 50,
+                columnDefs: [{
+                    target: 0,
+                    visible: false,
+                    searchable: false
+                }],
                 columns: [
+                    { title: "Id", data: "id" },
                     { title: "Position", data: "position" },
                     { title: "Username", data: "username" },
                     { title: "Guesses", data: "guesses" },
                     { title: "Rating", data: "rating" }
                 ],
-                order: [0, "asc"]
+                order: [1, "asc"]
+            });
+
+            $('#leaderboardTable tbody').on('click', 'tr', function() {
+                var id = table.row(this).data().id
+                window.location.href = server_address + 'users/' + id
             });
         });
     });

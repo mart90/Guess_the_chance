@@ -1,9 +1,4 @@
-Rating system not negative sum
-Suggested by on event page
-User profile
-Rating history on profile page
-Overview accessible without logging in
-Compare rating history with other user
+Wildest guess on user page
 
 INDEX
 Not fetching ALL resolved events?

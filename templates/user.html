@@ -1,0 +1,201 @@
+<!DOCTYPE HTML>
+<html data-bs-theme="dark">
+<head>
+    <title>Predictions - User {{userId}}</title>	
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>    
+    <script src="https://cdn.datatables.net/2.1.4/js/dataTables.js"></script>
+    <script src="https://cdn.datatables.net/2.1.4/js/dataTables.bootstrap5.js"></script>
+	<script src="../js/serverAddress.js"></script>
+	<script src="../js/functions.js"></script>
+    
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous"/>
+    <link rel="stylesheet" href="https://cdn.datatables.net/2.1.4/css/dataTables.bootstrap5.css" />
+</head>
+<body>
+    <div class="container border-start">
+        <nav class="navbar navbar-expand-lg">
+            <a id="homeLink" class="navbar-brand">Home</a>
+            <div class="navbar-nav" style="margin-left:auto">
+                <a id="leaderboardLink" class="nav-item nav-link">Leaderboard</a>
+                <a id="aboutLink" class="nav-item nav-link">About</a>
+                <a href="https://discord.gg/GsW85GtFXr" target="_blank" id="discordLink" class="nav-item nav-link">Discord</a>
+            </div>
+        </nav>
+    </div>
+    <div class="container-sm pt-5 border-start">
+        <form>
+            <div class="row mb-3">
+                <label class="col-form-label col-sm-2 text-end" for="username">Name</label>
+                <div class="col-sm-10">
+                    <input type="text" maxlength="50" readonly class="form-control-plaintext" id="username">
+                </div>
+            </div>
+            <div class="row mb-3">
+                <label class="col-form-label col-sm-2 text-end" for="date_joined">Date joined</label>
+                <div class="col-sm-10">
+                    <input type="text" readonly class="form-control-plaintext" id="date_joined">
+                </div>
+            </div>
+            <div class="row mb-3">
+                <label class="col-form-label col-sm-2 text-end" for="rating">Rating</label>
+                <div class="col-sm-10">
+                    <input type="text" readonly class="form-control-plaintext" id="rating">
+                </div>
+            </div>
+            <div class="row mb-3">
+                <label class="col-form-label col-sm-2 text-end" for="winrate">Win rate</label>
+                <div class="col-sm-10">
+                    <input type="text" readonly class="form-control-plaintext" id="winrate">
+                </div>
+            </div>
+        </form>
+
+        <div class="row mb-3 pt-2" id="ratingGraphContainer">
+            <canvas id="ratingGraph"></canvas>
+        </div>
+
+        <div class="row mb-3 pt-2" id="guessesTableContainer">
+            <table id="guessesTable" hidden class="table table-striped" >
+                <thead>
+                    <tr>
+                        <th>Id</th>
+                        <th>Title</th>
+                        <th>Guess</th>
+                        <th>Average guess</th>
+                        <th>Result</th>
+                        <th>Resolved at</th>
+                        <th>Rating change</th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+        </div>
+    </div>
+</body>
+
+<script>
+    $(document).ready( function () {
+        $("#homeLink").prop("href", server_address)
+        $("#leaderboardLink").prop("href", server_address + "leaderboard.html")
+        $("#aboutLink").prop("href", server_address + "about.html")
+
+        var getUserCall = $.ajax({
+            type: "GET",
+            url: server_address + "backend/users/{{userId}}",
+            beforeSend: function (xhr) {
+                xhr.setRequestHeader('Authorization', 'Bearer ' + localStorage.getItem('token'));
+            }
+        });
+
+        var getResolvedEventsCall = $.ajax({
+            type: "GET",
+            url: server_address + "backend/users/{{userId}}/resolvedEvents",
+            beforeSend: function (xhr) {
+                xhr.setRequestHeader('Authorization', 'Bearer ' + localStorage.getItem('token'));
+            }
+        });
+
+        getUserCall.done(function (user) {
+            var winrateStr
+            if (user.wins + user.losses == 0) {
+                winrateStr = "N/A"
+            }
+            else {
+                winrateStr =  Math.round(1000 * user.wins / (user.wins + user.losses), 2) / 10
+                winrateStr += "%  (" + user.wins + " wins, " + user.losses + " losses)"
+            }
+
+            $("#username").val(user.name)
+            $("#date_joined").val(user.date_joined)
+            $("#rating").val(Math.round(user.rating * 100) / 100)
+            $("#winrate").val(winrateStr)
+            
+            $(document).prop('title', 'Predictions - ' + user.name);
+        })
+
+        getResolvedEventsCall.done(function (resolvedEvents) {
+            for (var guess of resolvedEvents.guesses) {
+                guess.date_resolved = convertDatetime(guess.date_resolved)
+                if (guess.average_guess > 0) {
+                    guess.average_guess = Math.round(guess.average_guess * 10000) / 100
+                    guess.average_guess += "%"
+                }
+                if (guess.guess > 0) {
+                    guess.guess = Math.round(guess.guess * 10000) / 100
+                    guess.guess += "%"
+                }
+            }
+
+            var table = $('#guessesTable').DataTable({
+                data: resolvedEvents.guesses,
+                pageLength: 50,
+                columnDefs: [{
+                    target: 0,
+                    visible: false,
+                    searchable: false
+                }],
+                columns: [
+                    { title: "Id", data: "id" },
+                    { title: "Title", data: "description" },
+                    { title: "Guess", data: "guess" },
+                    { title: "Average guess", data: "average_guess" },
+                    { title: "Result", data: "result" },
+                    { title: "Resolved at", data: "date_resolved" },
+                    { title: "Rating change", data: "rating_gained" }
+                ],
+                order: [[5, "desc"]]
+            });
+            
+            $('#guessesTable').prop("hidden", false)
+
+            $('#guessesTable tbody').on('click', 'tr', function() {
+                var id = table.row(this).data().id
+                window.location.href = server_address + 'events/' + id
+            });
+            
+            const chart = $("#ratingGraph")
+
+            var x = resolvedEvents.rating_history.map(function (rh) {
+                return rh.guess
+            })
+            var rating = resolvedEvents.rating_history.map(function (rh){
+                return rh.rating
+            })
+            // var target = resolvedEvents.rating_history.map(function (rh){
+            //     return rh.target
+            // })
+
+            new Chart(chart, {
+                type: 'line',
+                data: {
+                    labels: x,
+                    datasets: [{
+                            label: 'Rating',
+                            data: rating,
+                            borderWidth: 1
+                        }, 
+                        // {
+                        //     label: 'Target',
+                        //     data: target,
+                        //     borderWidth: 1
+                        // }
+                    ]
+                },
+                options: {
+                    scales: {
+                        x: {                            
+                            title: {
+                                display: true,
+                                text: "Guesses"
+                            }
+                        }
+                    }
+                }
+            });
+        })
+    });
+</script>

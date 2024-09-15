@@ -4,4 +4,5 @@ backend/__pycache__
 backend/ratings/__pycache__
 backend/config.py
 templates/event_test.html
+templates/user_test.html
 js/serverAddress.js

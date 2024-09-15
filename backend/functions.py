@@ -62,6 +62,11 @@ def set_new_ratings(users, result):
 
             user.public_rating += user.public_rating_gained
 
+            if user.public_rating < 0:
+                # Public rating can't go below 0
+                user.public_rating_gained -= user.public_rating
+                user.public_rating = 0
+
             if user.public_rating > user.rating:
                 # If our public rating overtook our real rating, equalize them
                 user.public_rating = user.rating

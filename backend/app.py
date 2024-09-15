@@ -119,7 +119,7 @@ def get_events(current_user):
     result = [list(row) for row in mysql.cursor.fetchall()]
 
     for row in result:
-        if row[8] is None and row[5] is None and row[12] is None:
+        if row[8] is None and row[5] is None and row[12] is None and as_utc(row[3]) > datetime.now(timezone.utc):
             row[7] = None
         del row[-1]
 
@@ -175,6 +175,11 @@ def get_event_view(id):
     return render_template("event.html", eventId=id)
 
 
+@app.route("/users/<id>", methods=["GET"])
+def get_user_view(id):
+    return render_template("user.html", userId=id)
+
+
 @app.route("/backend/events/<id>", methods=["GET"])
 @token_required
 def get_event(current_user, id):
@@ -211,7 +216,8 @@ def get_event(current_user, id):
         event_result[8] is not None and (
             event_result[9] is not None 
             or event_result[6] is not None 
-            or event_result[12] is not None) \
+            or event_result[12] is not None
+            or as_utc(event_result[3]) < datetime.now(timezone.utc)) \
         else None
 
     utc_datetime = datetime.now(timezone.utc)
@@ -378,14 +384,14 @@ def get_event_guesses(current_user, id):
     mysql = MySQL().connect(mysql_ip, mysql_db)
 
     mysql.query("""
-        SELECT e.result, p.predicted_probability, pa.user_id 
+        SELECT e.result, p.predicted_probability, pa.user_id, e.date_close
         FROM event e
         LEFT JOIN prediction p ON e.id = p.event_id AND p.user_id = %s
         LEFT JOIN pass pa on pa.event_id = e.id AND pa.user_id = %s
         WHERE e.id = %s""", (current_user.id, current_user.id, id))
     
     result = mysql.cursor.fetchone()
-    if result[0] is None and result[1] is None and result[2] is None:
+    if result[0] is None and result[1] is None and result[2] is None and as_utc(result[3]) > datetime.now(timezone.utc):
         mysql.commit_and_close()
         return ("Forbidden", 403)
 
@@ -474,7 +480,7 @@ def approve_event(current_user, id):
 def get_leaderboard(current_user):    
     mysql = MySQL().connect(mysql_ip, mysql_db)
     mysql.query("""
-        SELECT u.name, u.public_rating, COUNT(*)
+        SELECT u.name, u.public_rating, COUNT(*), u.id
         FROM user u
         JOIN prediction p ON p.user_id = u.id
         GROUP BY u.id
@@ -485,6 +491,7 @@ def get_leaderboard(current_user):
     users = []
     for i in range(len(result)):
         users.append({
+            "id": result[i][3],
             "position": i + 1,
             "username": result[i][0],
             "rating": result[i][1] if result[i][1] > 0 else 0,
@@ -504,3 +511,94 @@ def pass_on_event(current_user, id):
 
     mysql.commit_and_close()
     return ("", 204)
+
+
+@app.route("/backend/users/<id>", methods=["GET"])
+@token_required
+def get_user(current_user, id):    
+    mysql = MySQL().connect(mysql_ip, mysql_db)
+
+    mysql.query("""
+        SELECT
+            name,
+            date_added,
+            public_rating,
+            (SELECT COUNT(*) FROM prediction WHERE user_id = %s AND rating_gained > 0) as wins,
+            (SELECT COUNT(*) FROM prediction WHERE user_id = %s AND rating_gained < 0) as losses
+        FROM user
+        WHERE id = %s""", (id, id, id))
+    
+    result = mysql.cursor.fetchone()
+
+    user = {
+        "name": result[0],
+        "date_joined": result[1],
+        "rating": result[2],
+        "wins": result[3],
+        "losses": result[4]
+    }
+    
+    mysql.commit_and_close()
+    return jsonify(user)
+
+
+@app.route("/backend/users/<id>/resolvedEvents", methods=["GET"])
+@token_required
+def get_rating_history(current_user, id):    
+    mysql = MySQL().connect(mysql_ip, mysql_db)
+
+    mysql.query("""
+        SELECT
+            e.date_resolved,
+            p.public_rating_gained,
+            p.rating_gained,
+            p.predicted_probability,
+            (SELECT AVG(predicted_probability) FROM prediction WHERE event_id = e.id) as average_guess,
+            e.result,
+            e.description,
+            e.id
+        FROM prediction p
+        JOIN event e on e.id = p.event_id
+        WHERE 
+            user_id = %s
+            AND e.result IS NOT NULL
+        ORDER BY e.date_resolved""", (id))
+    
+    result = mysql.cursor.fetchall()
+
+    target = 10
+    public_rating = 0
+    guess = 0
+
+    rating_history = [{
+        "guess": guess,
+        "rating": public_rating,
+        #"target": target
+    }]
+    guesses = []
+    
+    for row in result:
+        guesses.append({
+            "id": row[7],
+            "date_resolved": row[0],
+            "description": row[6],
+            "guess": round(row[3], 4),
+            "average_guess": round(row[4], 4),
+            "result": row[5],
+            "rating_gained": round(row[1], 2)
+        })
+
+        guess += 1
+        public_rating += row[1]
+        target += row[2]
+        rating_history.append({
+            "guess": guess,
+            "rating": public_rating,
+            #"target": target
+        })
+    
+    mysql.commit_and_close()
+    return jsonify({
+        "guesses": guesses,
+        "rating_history": rating_history
+    })

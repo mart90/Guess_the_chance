@@ -347,6 +347,8 @@
             $("#suggested_by").val(event.suggested_by)
             $("#notify_discord").prop("checked", event.notify_discord)
 
+            $(document).prop('title', 'Predictions - ' + event.description);
+
             $('#category option').filter(function() {
                 return $(this).text() === event.category;
             }).prop('selected', true);
