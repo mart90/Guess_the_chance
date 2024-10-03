@@ -103,6 +103,8 @@
         $("#leaderboardLink").prop("href", server_address + "leaderboard.html")
         $("#aboutLink").prop("href", server_address + "about.html")
 
+        $("#date_start").val(new Date().toISOString().split('T')[0])
+
         var getCategoriesCall = $.ajax({
             type: "GET",
             url: server_address + "backend/categories",
