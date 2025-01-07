@@ -1,10 +1,11 @@
 import requests
 import json
+import config
 from mysql import *
 
 
 username = "Notification bot"
-notify_webhook = "https://discord.com/api/webhooks/1278236084945551423/UAPZzNhlEhEqg3686_SiCf26WRqC4S9vGBN_GuFVjjycehOI64XUsYPqXWVsTZvbpEGf"
+notify_webhook = config["discord_webhook"]
 
 mysql = MySQL().connect(mysql_ip, mysql_db)
 
